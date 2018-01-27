@@ -1,4 +1,5 @@
 import numpy as np
+import re
 
 # method for generating text
 def generate_text(model, length, vocab_size, ix_to_char):
@@ -9,15 +10,23 @@ def generate_text(model, length, vocab_size, ix_to_char):
 	for i in range(length):
 		# appending the last predicted character to sequence
 		X[0, i, :][ix[-1]] = 1
-		print(ix_to_char[ix[-1]], end="")
+		print(ix_to_char[ix[-1]], end=" ")
 		ix = np.argmax(model.predict(X[:, :i+1, :])[0], 1)
 		y_char.append(ix_to_char[ix[-1]])
-	return ('').join(y_char)
+	print("\n-----------")
+	return (' ').join(y_char)
 
 # method for preparing the training data
 def load_data(data_dir, seq_length):
 	data = open(data_dir, 'r').read()
+	
+	# chars = list(set(data))
+	data = re.split('(\"|!|[^("| |!)]*)', data)[1::2]
 	chars = list(set(data))
+
+	# Check dictionary
+	open("dictionary", 'w').write("\n".join(chars))
+
 	VOCAB_SIZE = len(chars)
 
 	print('Data length: {} characters'.format(len(data)))
