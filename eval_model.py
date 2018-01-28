@@ -31,8 +31,8 @@ WEIGHTS = args['weights']
 GENERATE_LENGTH = args['generate_length']
 LAYER_NUM = args['layer_num']
 
-# Creating training data
 X, y, VOCAB_SIZE, ix_to_char, char_to_ix = load_data(DATA_DIR, SEQ_LENGTH)
+
 
 # Creating and compiling the Network
 model = Sequential()
@@ -43,30 +43,9 @@ model.add(TimeDistributed(Dense(VOCAB_SIZE)))
 model.add(Activation('softmax'))
 model.compile(loss="categorical_crossentropy", optimizer="rmsprop")
 
-# Generate some sample before training to know how bad it is!
-generate_text(model, args['generate_length'], VOCAB_SIZE, ix_to_char, char_to_ix)
+model.load_weights(WEIGHTS)
 
-if not WEIGHTS == '':
-  model.load_weights(WEIGHTS)
-  nb_epoch = int(WEIGHTS[WEIGHTS.rfind('_') + 1:WEIGHTS.find('.')])
-else:
-  nb_epoch = 0
-
-# Training if there is no trained weights specified
-if args['mode'] == 'train' or WEIGHTS == '':
-  while True:
-    print('\n\nEpoch: {}\n'.format(nb_epoch))
-    model.fit(X, y, batch_size=BATCH_SIZE, verbose=1, epochs=1)
-    nb_epoch += 1
-    generate_text(model, GENERATE_LENGTH, VOCAB_SIZE, ix_to_char, char_to_ix)
-    if nb_epoch % 50 == 0:
-      model.save_weights('checkpoint_layer_{}_hidden_{}_epoch_{}.hdf5'.format(LAYER_NUM, HIDDEN_DIM, nb_epoch))
-
-# Else, loading the trained weights and performing generation only
-elif WEIGHTS == '':
-  # Loading the trained weights
-  model.load_weights(WEIGHTS)
-  generate_text(model, GENERATE_LENGTH, VOCAB_SIZE, ix_to_char, char_to_ix)
-  print('\n\n')
-else:
-  print('\n\nNothing to do!')
+print("Ask Plato something!")
+while True:
+    question = input()
+    generate_text(model, args['generate_length'], VOCAB_SIZE, ix_to_char, char_to_ix, question)

@@ -2,27 +2,34 @@ import numpy as np
 import re
 
 # method for generating text
-def generate_text(model, length, vocab_size, ix_to_char):
+def generate_text(model, length, vocab_size, ix_to_char, char_to_ix, intro = "Family. "):
 	# starting with random character
-	ix = [np.random.randint(vocab_size)]
-	y_char = [ix_to_char[ix[-1]]]
+	ix = list(intro)
+	y_char = ix
 	X = np.zeros((1, length, vocab_size))
-	for i in range(length):
+
+
+	ix = [char_to_ix[x] for x in ix]
+
+	for i in range(len(ix)):
+		X[0, i, :][ix[i]] = 1
+
+	for i in range(len(ix), length):
 		# appending the last predicted character to sequence
 		X[0, i, :][ix[-1]] = 1
-		print(ix_to_char[ix[-1]], end=" ")
+		print(ix_to_char[ix[-1]], end="")
 		ix = np.argmax(model.predict(X[:, :i+1, :])[0], 1)
 		y_char.append(ix_to_char[ix[-1]])
+
 	print("\n-----------")
-	return (' ').join(y_char)
+	return ('').join(y_char)
 
 # method for preparing the training data
 def load_data(data_dir, seq_length):
 	data = open(data_dir, 'r').read()
-	
+
 	# chars = list(set(data))
-	data = re.split('(\"|!|[^("| |!)]*)', data)[1::2]
-	chars = list(set(data))
+	chars = list(sorted(set(data)))
 
 	# Check dictionary
 	open("dictionary", 'w').write("\n".join(chars))
@@ -33,6 +40,7 @@ def load_data(data_dir, seq_length):
 	print('Vocabulary size: {} characters'.format(VOCAB_SIZE))
 
 	ix_to_char = {ix:char for ix, char in enumerate(chars)}
+	print(ix_to_char)
 	char_to_ix = {char:ix for ix, char in enumerate(chars)}
 
 	ic_hack_fix = int(len(data) / seq_length)
@@ -52,4 +60,4 @@ def load_data(data_dir, seq_length):
 		for j in range(seq_length):
 			target_sequence[j][y_sequence_ix[j]] = 1.
 			y[i] = target_sequence
-	return X, y, VOCAB_SIZE, ix_to_char
+	return X, y, VOCAB_SIZE, ix_to_char, char_to_ix
